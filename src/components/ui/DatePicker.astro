@@ -1,0 +1,949 @@
+---
+interface Props {
+  id?: string;
+  name: string;
+
+  label?: string;
+  value?: string;
+
+  min?: string;
+  max?: string;
+
+  placeholder?: string;
+  locale?: string;
+
+  required?: boolean;
+  disabled?: boolean;
+  clearable?: boolean;
+
+  class?: string;
+}
+
+const {
+  id: providedId,
+  name,
+  label = "Fecha",
+  value = "",
+  min = "",
+  max = "",
+  placeholder = "Seleccionar fecha",
+  locale = "es-PE",
+  required = false,
+  disabled = false,
+  clearable = true,
+  class: className,
+} = Astro.props;
+
+const uid = providedId ?? `datepicker-${crypto.randomUUID()}`;
+
+const inputId = `${uid}-input`;
+const buttonId = `${uid}-button`;
+const popoverId = `${uid}-popover`;
+const monthId = `${uid}-month`;
+
+const anchorName = `--${uid.replace(/[^a-zA-Z0-9_-]/g, "-")}-anchor`;
+
+const formatInitialDate = (iso: string) => {
+  if (!iso) return "";
+
+  const [year, month, day] = iso.slice(0, 10).split("-").map(Number);
+
+  if (!year || !month || !day) return "";
+
+  return new Intl.DateTimeFormat(locale, {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(new Date(Date.UTC(year, month - 1, day)));
+};
+
+const initialDisplay = formatInitialDate(value);
+---
+
+<div
+  data-datepicker
+  data-locale={locale}
+  data-value={value}
+  data-min={min}
+  data-max={max}
+  data-clearable={String(clearable)}
+  class:list={["w-full", className]}
+>
+  {
+    label && (
+      <label
+        for={inputId}
+        class="
+          mb-1.5
+          block
+          text-sm
+          font-medium
+          text-slate-700
+
+          dark:text-slate-200
+        "
+      >
+        {label}
+
+        {required && (
+          <span class="text-danger-500" aria-hidden="true">
+            {" "}
+            *
+          </span>
+        )}
+      </label>
+    )
+  }
+
+  <div class="relative" style={`anchor-name: ${anchorName};`}>
+    <!-- Valor visual -->
+    <input
+      id={inputId}
+      type="text"
+      value={initialDisplay}
+      placeholder={placeholder}
+      readonly
+      disabled={disabled}
+      aria-haspopup="dialog"
+      aria-controls={popoverId}
+      aria-expanded="false"
+      autocomplete="off"
+      class="h-11
+        w-full
+        cursor-pointer
+        rounded-xl
+        border
+        border-slate-300
+        bg-white
+        px-3
+        pr-11
+        text-sm
+        text-slate-900
+        shadow-sm
+        outline-none
+        transition
+        duration-200
+        placeholder:text-slate-400
+        hover:border-slate-400
+        focus:border-brand-500
+        focus:ring-4
+        focus:ring-brand-500/10
+        disabled:pointer-events-none
+        disabled:cursor-not-allowed
+        disabled:bg-slate-100
+        disabled:text-slate-400
+        dark:border-slate-700
+        dark:bg-slate-900
+        dark:text-slate-100
+        dark:hover:border-slate-600
+        dark:disabled:bg-slate-800"
+    />
+
+    <!-- Este es el valor real que recibirá el formulario -->
+    <input
+      data-date-value
+      type="hidden"
+      name={name}
+      value={value}
+      required={required}
+    />
+
+    <button
+      id={buttonId}
+      type="button"
+      disabled={disabled}
+      aria-label="Abrir calendario"
+      aria-controls={popoverId}
+      popovertarget={popoverId}
+      class="absolute
+        inset-y-0
+        right-0
+        flex
+        w-11
+        items-center
+        justify-center
+        rounded-r-xl
+        text-slate-400
+        transition-colors
+        hover:text-brand-600
+        focus-visible:outline-none
+        focus-visible:ring-2
+        focus-visible:ring-inset
+        focus-visible:ring-brand-500
+        disabled:pointer-events-none
+        dark:text-slate-500
+        dark:hover:text-brand-400"
+    >
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.8"
+        class="size-5"
+        aria-hidden="true"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          d="M8 2v3M16 2v3M3.5 9h17M5.5 4.5h13a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2v-12a2 2 0 0 1 2-2Z"
+        ></path>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Calendario -->
+  <div
+    id={popoverId}
+    popover="auto"
+    role="dialog"
+    aria-modal="false"
+    aria-label="Seleccionar fecha"
+    style={`
+    position-anchor: ${anchorName};
+    position-area: bottom span-right;
+    position-try-fallbacks:
+      flip-block,
+      flip-inline,
+      flip-block flip-inline;
+  `}
+    class="m-0
+    inset-auto
+    mt-2
+    w-84
+    max-w-[calc(100vw-2rem)]
+    rounded-2xl
+    border
+    border-slate-200
+    bg-white
+    p-4
+    shadow-xl
+    shadow-slate-950/10
+    opacity-0
+    scale-[0.98]
+    transition
+    transition-discrete
+    duration-150
+    open:opacity-100
+    open:scale-100
+    starting:open:opacity-0
+    starting:open:scale-[0.98]
+    dark:border-slate-700
+    dark:bg-slate-900
+    dark:shadow-black/30"
+  >
+    <!-- Navegación -->
+    <div
+      class="mb-3
+        flex
+        items-center
+        justify-between
+        gap-2"
+    >
+      <button
+        data-prev-month
+        type="button"
+        aria-label="Mes anterior"
+        class="flex
+          size-9
+          items-center
+          justify-center
+          rounded-lg
+          text-slate-500
+          transition-colors
+          hover:bg-slate-100
+          hover:text-slate-900
+          focus-visible:outline-none
+          focus-visible:ring-2
+          focus-visible:ring-brand-500/40
+          dark:hover:bg-slate-800
+          dark:hover:text-white"
+      >
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          class="size-4"
+          aria-hidden="true"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="m15 18-6-6 6-6"></path>
+        </svg>
+      </button>
+
+      <p
+        id={monthId}
+        data-month-label
+        aria-live="polite"
+        class="text-sm
+          font-semibold
+          capitalize
+          text-slate-900
+          dark:text-slate-100"
+      >
+      </p>
+
+      <button
+        data-next-month
+        type="button"
+        aria-label="Mes siguiente"
+        class="flex
+          size-9
+          items-center
+          justify-center
+          rounded-lg
+          text-slate-500
+          transition-colors
+          hover:bg-slate-100
+          hover:text-slate-900
+          focus-visible:outline-none
+          focus-visible:ring-2
+          focus-visible:ring-brand-500/40
+          dark:hover:bg-slate-800
+          dark:hover:text-white"
+      >
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          class="size-4"
+          aria-hidden="true"
+        >
+          <path stroke-linecap="round" stroke-linejoin="round" d="m9 18 6-6-6-6"
+          ></path>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Días semana -->
+    <div data-weekdays role="row" class="mb-1 grid grid-cols-7 gap-1"></div>
+
+    <!-- Días -->
+    <div
+      data-days
+      role="grid"
+      aria-labelledby={monthId}
+      class="grid grid-cols-7 gap-1"
+    >
+    </div>
+
+    <div
+      class="mt-3
+        flex
+        items-center
+        justify-between
+        border-t
+        border-slate-100
+        pt-3
+        dark:border-slate-800"
+    >
+      {
+        clearable ? (
+          <button
+            data-clear
+            type="button"
+            class="
+              rounded-lg
+              px-3
+              py-2
+
+              text-sm
+              font-medium
+              text-slate-500
+
+              transition-colors
+
+              hover:bg-slate-100
+              hover:text-slate-900
+
+              focus-visible:outline-none
+              focus-visible:ring-2
+              focus-visible:ring-brand-500/30
+
+              dark:hover:bg-slate-800
+              dark:hover:text-white
+            "
+          >
+            Limpiar
+          </button>
+        ) : (
+          <span />
+        )
+      }
+
+      <button
+        data-today
+        type="button"
+        class="rounded-lg
+          px-3
+          py-2
+          text-sm
+          font-medium
+          text-brand-700
+          transition-colors
+          hover:bg-brand-50
+          focus-visible:outline-none
+          focus-visible:ring-2
+          focus-visible:ring-brand-500/30
+          dark:text-brand-300
+          dark:hover:bg-brand-950"
+      >
+        Hoy
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  type DateParts = {
+    year: number;
+    month: number;
+    day: number;
+  };
+
+  const pad = (value: number) => String(value).padStart(2, "0");
+
+  const toISO = ({ year, month, day }: DateParts) =>
+    `${year}-${pad(month)}-${pad(day)}`;
+
+  const parseISO = (value: string): DateParts | null => {
+    const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+
+    if (!match) return null;
+
+    const [, year, month, day] = match;
+
+    return {
+      year: Number(year),
+      month: Number(month),
+      day: Number(day),
+    };
+  };
+
+  const fromUTCDate = (date: Date): DateParts => ({
+    year: date.getUTCFullYear(),
+    month: date.getUTCMonth() + 1,
+    day: date.getUTCDate(),
+  });
+
+  const toUTCDate = ({ year, month, day }: DateParts) =>
+    new Date(Date.UTC(year, month - 1, day));
+
+  const addDays = (value: DateParts, amount: number): DateParts => {
+    const date = toUTCDate(value);
+
+    date.setUTCDate(date.getUTCDate() + amount);
+
+    return fromUTCDate(date);
+  };
+
+  const addMonths = (value: DateParts, amount: number): DateParts => {
+    const date = new Date(Date.UTC(value.year, value.month - 1 + amount, 1));
+
+    return {
+      year: date.getUTCFullYear(),
+      month: date.getUTCMonth() + 1,
+      day: 1,
+    };
+  };
+
+  const today = (): DateParts => {
+    /*
+     * Usa Temporal automáticamente cuando
+     * el navegador ya lo soporte.
+     */
+    const temporal = (
+      globalThis as typeof globalThis & {
+        Temporal?: {
+          Now: {
+            plainDateISO(): {
+              year: number;
+              month: number;
+              day: number;
+            };
+          };
+        };
+      }
+    ).Temporal;
+
+    if (temporal) {
+      const current = temporal.Now.plainDateISO();
+
+      return {
+        year: current.year,
+        month: current.month,
+        day: current.day,
+      };
+    }
+
+    const current = new Date();
+
+    return {
+      year: current.getFullYear(),
+      month: current.getMonth() + 1,
+      day: current.getDate(),
+    };
+  };
+
+  const initializeDatePickers = () => {
+    const roots = document.querySelectorAll<HTMLElement>("[data-datepicker]");
+
+    roots.forEach((root) => {
+      if (root.dataset.initialized === "true") {
+        return;
+      }
+
+      root.dataset.initialized = "true";
+
+      const locale = root.dataset.locale ?? "es-PE";
+
+      const min = root.dataset.min || undefined;
+
+      const max = root.dataset.max || undefined;
+
+      const initialValue = root.dataset.value || "";
+
+      const display =
+        root.querySelector<HTMLInputElement>('input[type="text"]');
+
+      const hidden = root.querySelector<HTMLInputElement>("[data-date-value]");
+
+      const popover = root.querySelector<HTMLElement>('[popover="auto"]');
+
+      const days = root.querySelector<HTMLElement>("[data-days]");
+
+      const weekdays = root.querySelector<HTMLElement>("[data-weekdays]");
+
+      const monthLabel = root.querySelector<HTMLElement>("[data-month-label]");
+
+      const prev = root.querySelector<HTMLButtonElement>("[data-prev-month]");
+
+      const next = root.querySelector<HTMLButtonElement>("[data-next-month]");
+
+      const todayButton = root.querySelector<HTMLButtonElement>("[data-today]");
+
+      const clear = root.querySelector<HTMLButtonElement>("[data-clear]");
+
+      if (
+        !display ||
+        !hidden ||
+        !popover ||
+        !days ||
+        !weekdays ||
+        !monthLabel ||
+        !prev ||
+        !next ||
+        !todayButton
+      ) {
+        return;
+      }
+
+      const selectedInitial = parseISO(initialValue);
+
+      const initial = selectedInitial ?? today();
+
+      let selected = selectedInitial ? toISO(selectedInitial) : "";
+
+      let focusedDate = initial;
+
+      let view = {
+        year: initial.year,
+        month: initial.month,
+        day: 1,
+      };
+
+      const dateFormatter = new Intl.DateTimeFormat(locale, {
+        day: "2-digit",
+        month: "long",
+        year: "numeric",
+        timeZone: "UTC",
+      });
+
+      const monthFormatter = new Intl.DateTimeFormat(locale, {
+        month: "long",
+        year: "numeric",
+        timeZone: "UTC",
+      });
+
+      const weekdayFormatter = new Intl.DateTimeFormat(locale, {
+        weekday: "short",
+        timeZone: "UTC",
+      });
+
+      const displayValue = (iso: string) => {
+        const parts = parseISO(iso);
+
+        if (!parts) return "";
+
+        return dateFormatter.format(toUTCDate(parts));
+      };
+
+      const isAllowed = (iso: string) =>
+        (!min || iso >= min) && (!max || iso <= max);
+
+      const renderWeekdays = () => {
+        /*
+         * Comenzamos en lunes.
+         * 2024-01-01 fue lunes.
+         */
+        const monday = new Date(Date.UTC(2024, 0, 1));
+
+        weekdays.replaceChildren();
+
+        for (let index = 0; index < 7; index++) {
+          const date = new Date(monday);
+
+          date.setUTCDate(monday.getUTCDate() + index);
+
+          const element = document.createElement("div");
+
+          element.setAttribute("role", "columnheader");
+
+          element.className =
+            "flex h-8 items-center justify-center text-[11px] font-semibold uppercase tracking-wide text-slate-400";
+
+          element.textContent = weekdayFormatter.format(date).replace(".", "");
+
+          weekdays.append(element);
+        }
+      };
+
+      const setValue = (iso: string, close = true) => {
+        selected = iso;
+
+        hidden.value = iso;
+        display.value = iso ? displayValue(iso) : "";
+
+        hidden.dispatchEvent(
+          new Event("input", {
+            bubbles: true,
+          }),
+        );
+
+        hidden.dispatchEvent(
+          new Event("change", {
+            bubbles: true,
+          }),
+        );
+
+        root.dispatchEvent(
+          new CustomEvent("datechange", {
+            bubbles: true,
+            detail: {
+              value: iso || null,
+            },
+          }),
+        );
+
+        render();
+
+        if (close) {
+          popover.hidePopover();
+          display.focus();
+        }
+      };
+
+      const render = () => {
+        const firstDay = new Date(Date.UTC(view.year, view.month - 1, 1));
+
+        /*
+         * JS:
+         * domingo = 0
+         *
+         * Nosotros:
+         * lunes = 0
+         */
+        const offset = (firstDay.getUTCDay() + 6) % 7;
+
+        const gridStart = addDays(
+          {
+            year: view.year,
+            month: view.month,
+            day: 1,
+          },
+          -offset,
+        );
+
+        monthLabel.textContent = monthFormatter.format(toUTCDate(view));
+
+        days.replaceChildren();
+
+        const todayISO = toISO(today());
+
+        for (let index = 0; index < 42; index++) {
+          const date = addDays(gridStart, index);
+
+          const iso = toISO(date);
+
+          const currentMonth =
+            date.month === view.month && date.year === view.year;
+
+          const isToday = iso === todayISO;
+
+          const isSelected = iso === selected;
+
+          const allowed = isAllowed(iso);
+
+          const cell = document.createElement("div");
+
+          cell.setAttribute("role", "gridcell");
+
+          cell.className = "flex items-center justify-center";
+
+          const button = document.createElement("button");
+
+          button.type = "button";
+          button.dataset.date = iso;
+          button.textContent = String(date.day);
+
+          button.disabled = !allowed;
+
+          button.tabIndex = iso === toISO(focusedDate) ? 0 : -1;
+
+          button.setAttribute(
+            "aria-label",
+            dateFormatter.format(toUTCDate(date)),
+          );
+
+          button.setAttribute("aria-selected", String(isSelected));
+
+          button.className = [
+            "relative flex size-10 items-center justify-center rounded-xl text-sm transition-colors duration-150",
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40",
+
+            allowed ? "cursor-pointer" : "cursor-not-allowed opacity-30",
+
+            currentMonth
+              ? "text-slate-700 dark:text-slate-200"
+              : "text-slate-300 dark:text-slate-600",
+
+            !isSelected && allowed
+              ? "hover:bg-slate-100 dark:hover:bg-slate-800"
+              : "",
+
+            isToday && !isSelected
+              ? "font-semibold text-brand-700 ring-1 ring-inset ring-brand-300 dark:text-brand-300 dark:ring-brand-800"
+              : "",
+
+            isSelected
+              ? "bg-brand-600 font-semibold text-white shadow-sm hover:bg-brand-700"
+              : "",
+          ]
+            .filter(Boolean)
+            .join(" ");
+
+          button.addEventListener("click", () => {
+            focusedDate = date;
+            setValue(iso);
+          });
+
+          cell.append(button);
+          days.append(cell);
+        }
+      };
+
+      const focusDate = (date: DateParts) => {
+        const iso = toISO(date);
+
+        if (!isAllowed(iso)) return;
+
+        focusedDate = date;
+
+        if (date.month !== view.month || date.year !== view.year) {
+          view = {
+            year: date.year,
+            month: date.month,
+            day: 1,
+          };
+
+          render();
+        } else {
+          render();
+        }
+
+        requestAnimationFrame(() => {
+          days
+            .querySelector<HTMLButtonElement>(`[data-date="${iso}"]`)
+            ?.focus();
+        });
+      };
+
+      days.addEventListener("keydown", (event) => {
+        const target = event.target as HTMLElement;
+
+        if (!target.matches("[data-date]")) {
+          return;
+        }
+
+        let nextDate: DateParts | undefined;
+
+        switch (event.key) {
+          case "ArrowLeft":
+            nextDate = addDays(focusedDate, -1);
+            break;
+
+          case "ArrowRight":
+            nextDate = addDays(focusedDate, 1);
+            break;
+
+          case "ArrowUp":
+            nextDate = addDays(focusedDate, -7);
+            break;
+
+          case "ArrowDown":
+            nextDate = addDays(focusedDate, 7);
+            break;
+
+          case "PageUp":
+            nextDate = addMonths(focusedDate, event.shiftKey ? -12 : -1);
+            break;
+
+          case "PageDown":
+            nextDate = addMonths(focusedDate, event.shiftKey ? 12 : 1);
+            break;
+
+          case "Home": {
+            const date = toUTCDate(focusedDate);
+
+            const offset = (date.getUTCDay() + 6) % 7;
+
+            nextDate = addDays(focusedDate, -offset);
+
+            break;
+          }
+
+          case "End": {
+            const date = toUTCDate(focusedDate);
+
+            const offset = (date.getUTCDay() + 6) % 7;
+
+            nextDate = addDays(focusedDate, 6 - offset);
+
+            break;
+          }
+
+          default:
+            return;
+        }
+
+        event.preventDefault();
+
+        if (nextDate) {
+          focusDate(nextDate);
+        }
+      });
+
+      prev.addEventListener("click", () => {
+        view = addMonths(view, -1);
+
+        focusedDate = {
+          ...view,
+          day: 1,
+        };
+
+        render();
+      });
+
+      next.addEventListener("click", () => {
+        view = addMonths(view, 1);
+
+        focusedDate = {
+          ...view,
+          day: 1,
+        };
+
+        render();
+      });
+
+      todayButton.addEventListener("click", () => {
+        const current = today();
+        const iso = toISO(current);
+
+        if (!isAllowed(iso)) return;
+
+        focusedDate = current;
+
+        view = {
+          ...current,
+          day: 1,
+        };
+
+        setValue(iso);
+      });
+
+      clear?.addEventListener("click", () => {
+        setValue("");
+      });
+
+      display.addEventListener("click", () => {
+        popover.showPopover();
+      });
+
+      display.addEventListener("keydown", (event) => {
+        if (
+          event.key === "Enter" ||
+          event.key === "ArrowDown" ||
+          event.key === " "
+        ) {
+          event.preventDefault();
+          popover.showPopover();
+        }
+      });
+
+      popover.addEventListener("toggle", (event) => {
+        const toggle = event as ToggleEvent;
+
+        const opened = toggle.newState === "open";
+
+        display.setAttribute("aria-expanded", String(opened));
+
+        if (!opened) return;
+
+        const base = parseISO(selected) ?? today();
+
+        focusedDate = base;
+
+        view = {
+          year: base.year,
+          month: base.month,
+          day: 1,
+        };
+
+        render();
+
+        requestAnimationFrame(() => {
+          days
+            .querySelector<HTMLButtonElement>(`[data-date="${toISO(base)}"]`)
+            ?.focus();
+        });
+      });
+
+      display.value = selected ? displayValue(selected) : "";
+
+      renderWeekdays();
+      render();
+    });
+  };
+
+  initializeDatePickers();
+
+  document.addEventListener("astro:page-load", initializeDatePickers);
+</script>
+
+<style>
+  .datepicker-popover {
+    margin: 0;
+    inset: auto;
+
+    position-area: bottom span-right;
+
+    position-try-fallbacks:
+      flip-block,
+      flip-inline,
+      flip-block flip-inline;
+  }
+</style>

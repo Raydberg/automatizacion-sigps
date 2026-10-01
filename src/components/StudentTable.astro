@@ -1,0 +1,176 @@
+---
+
+import type { Student } from "../interfaces/classes.interface";
+import Button from "./ui/Button.astro";
+import {formatDate} from "../utils/format-date"
+interface Props {
+  students: Student[];
+}
+
+const { students } = Astro.props;
+
+
+
+---
+
+<div
+  class="
+    overflow-hidden
+    rounded-2xl
+    border border-slate-200/80
+    bg-white
+    shadow-sm
+
+    dark:border-slate-800
+    dark:bg-slate-900
+  "
+>
+  <!-- Header -->
+  <div
+    class="
+      flex items-center justify-between
+      border-b border-slate-200/80
+      px-5 py-4
+      dark:border-slate-800
+    "
+  >
+    <div>
+      <h2
+        class="
+          text-base font-semibold
+          text-slate-950
+          dark:text-white
+        "
+      >
+        Asistencias
+      </h2>
+
+      <p
+        class="
+          mt-0.5
+          text-sm text-slate-500
+          dark:text-slate-400
+        "
+      >
+        {students.length} almunos encontrados
+      </p>
+    </div>
+
+    <Button variant="primary" size="sm">
+      Añadir estudiante
+    </Button>
+  </div>
+
+  {
+    students.length > 0 ? (
+      <div class="overflow-x-auto">
+        <table
+          class="
+            w-full min-w-225 text-left text-sm
+          "
+        >
+          <thead
+            class="
+              bg-slate-50
+              text-xs font-medium
+              uppercase
+              tracking-wide
+              text-slate-500
+
+              dark:bg-slate-950/50
+              dark:text-slate-400
+            "
+          >
+            <tr>
+              <th class="px-5 py-3.5">Nombre</th>
+              <th class="px-5 py-3.5">DNI</th>
+              <th class="px-5 py-3.5">Registrado</th>
+            </tr>
+          </thead>
+
+          <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+            {students.map((attendance) => (
+              <tr
+                class="
+                  group
+                  transition-colors
+                  duration-150
+                  hover:bg-slate-50/80
+                  dark:hover:bg-slate-800/40
+                "
+              >
+                <!-- Nombre -->
+                <td class="px-5 py-4">
+                  <div class="max-w-md">
+                    <p
+                      class="
+                        font-medium
+                        text-slate-900
+                        dark:text-slate-100
+                      "
+                    >
+                      {attendance.nombre}
+                    </p>        
+                  </div>
+                </td>
+
+                <!-- DNI -->
+                <td class="px-5 py-4">
+                  <span
+                    class="
+                      inline-flex
+                      rounded-lg
+                      bg-slate-100
+                      px-2.5 py-1
+                      text-xs font-medium
+                      text-slate-600
+
+                      dark:bg-slate-800
+                      dark:text-slate-300
+                    "
+                  >
+                    {attendance.numDoc}
+                  </span>
+                </td>
+
+                <!-- Fecha Registro -->
+                <td
+                  class="
+                    px-5 py-4
+                    whitespace-nowrap
+                    text-slate-600
+                    dark:text-slate-300
+                  "
+                >
+                  {formatDate(attendance.fechaRegistro.toString())}
+                </td>
+              
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    ) : (
+      <div
+        class="
+          flex
+          flex-col
+          items-center
+          justify-center
+          px-6 py-16
+          text-center
+        "
+      >
+        <p
+          class="
+            font-medium
+            text-slate-700
+            dark:text-slate-200
+          "
+        >
+          Sin alumnos registrados
+        </p>
+      </div>
+    )
+  }
+</div>

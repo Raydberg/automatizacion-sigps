@@ -1,0 +1,316 @@
+---
+import type {
+  Attendance,
+  AttendanceStatus,
+} from "../interfaces/Attendance.interface";
+import Button from "./ui/Button.astro";
+
+interface Props {
+  attendances: Attendance[];
+}
+
+const { attendances } = Astro.props;
+
+const formatDate = (value: string) => {
+  const [year, month, day] = value.slice(0, 10).split("-");
+
+  return `${day}/${month}/${year}`;
+};
+
+const statusStyles: Record<AttendanceStatus, string> = {
+  ABIERTO: `
+    bg-accent-50
+    text-accent-700
+    ring-accent-600/20
+  `,
+
+  FINALIZADO: `
+    bg-success-50
+    text-success-700
+    ring-success-600/20
+  `,
+};
+
+const statusDotStyles: Record<AttendanceStatus, string> = {
+  ABIERTO: "bg-accent-500",
+  FINALIZADO: "bg-success-500",
+};
+---
+
+<div
+  class="
+    overflow-hidden
+    rounded-2xl
+    border border-slate-200/80
+    bg-white
+    shadow-sm
+
+    dark:border-slate-800
+    dark:bg-slate-900
+  "
+>
+  <!-- Header -->
+  <div
+    class="
+      flex items-center justify-between
+      border-b border-slate-200/80
+      px-5 py-4
+      dark:border-slate-800
+    "
+  >
+    <div>
+      <h2
+        class="
+          text-base font-semibold
+          text-slate-950
+          dark:text-white
+        "
+      >
+        Asistencias
+      </h2>
+
+      <p
+        class="
+          mt-0.5
+          text-sm text-slate-500
+          dark:text-slate-400
+        "
+      >
+        {attendances.length} registros encontrados
+      </p>
+    </div>
+
+    <Button variant="primary" size="sm">
+      Nueva asistencia
+    </Button>
+  </div>
+
+  {
+    attendances.length > 0 ? (
+      <div class="overflow-x-auto">
+        <table
+          class="
+            w-full min-w-225 text-left text-sm
+          "
+        >
+          <thead
+            class="
+              bg-slate-50
+              text-xs font-medium
+              uppercase
+              tracking-wide
+              text-slate-500
+
+              dark:bg-slate-950/50
+              dark:text-slate-400
+            "
+          >
+            <tr>
+              <th class="px-5 py-3.5">Descripción</th>
+              <th class="px-5 py-3.5">Modalidad</th>
+              <th class="px-5 py-3.5">Fecha</th>
+              <th class="px-5 py-3.5 text-center">Sesión</th>
+              <th class="px-5 py-3.5">Estado</th>
+              <th class="px-5 py-3.5 text-right"> Acciones</th>
+            </tr>
+          </thead>
+
+          <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+            {attendances.map((attendance) => (
+              <tr
+                class="
+                  group
+                  transition-colors
+                  duration-150
+                  hover:bg-slate-50/80
+                  dark:hover:bg-slate-800/40
+                "
+              >
+                <!-- Descripción -->
+                <td class="px-5 py-4">
+                  <div class="max-w-md">
+                    <p
+                      class="
+                        font-medium
+                        text-slate-900
+                        dark:text-slate-100
+                      "
+                    >
+                      {attendance.descripcion}
+                    </p>
+
+                    {/* <p
+                      class="
+                        mt-1
+                        text-xs
+                        text-slate-400
+                      "
+                    >
+                      ID #{attendance.idAsisRapido}
+                    </p> */}
+                  </div>
+                </td>
+
+                <!-- Modalidad -->
+                <td class="px-5 py-4">
+                  <span
+                    class="
+                      inline-flex
+                      rounded-lg
+                      bg-slate-100
+                      px-2.5 py-1
+                      text-xs font-medium
+                      text-slate-600
+
+                      dark:bg-slate-800
+                      dark:text-slate-300
+                    "
+                  >
+                    {attendance.modalidad}
+                  </span>
+                </td>
+
+                <!-- Fecha -->
+                <td
+                  class="
+                    px-5 py-4
+                    whitespace-nowrap
+                    text-slate-600
+                    dark:text-slate-300
+                  "
+                >
+                  {formatDate(attendance.fecha)}
+                </td>
+
+                <!-- Sesión -->
+                <td class="px-5 py-4 text-center">
+                  <span
+                    class="
+                      inline-flex
+                      size-8
+                      items-center
+                      justify-center
+                      rounded-lg
+                      bg-brand-50
+                      font-semibold
+                      text-brand-700
+
+                      dark:bg-brand-950
+                      dark:text-brand-300
+                    "
+                  >
+                    {attendance.sesiones}
+                  </span>
+                </td>
+
+                <!-- Estado -->
+                <td class="px-5 py-4">
+                  <span
+                    class:list={[
+                      `
+                        inline-flex
+                        items-center
+                        gap-1.5
+                        rounded-full
+                        px-2.5 py-1
+                        text-xs
+                        font-medium
+                        ring-1
+                        ring-inset
+                      `,
+                      statusStyles[attendance.estado],
+                    ]}
+                  >
+                    <span
+                      class:list={[
+                        "size-1.5 rounded-full",
+                        statusDotStyles[attendance.estado],
+                      ]}
+                    />
+
+                    {attendance.estado === "FINALIZADO"
+                      ? "Finalizado"
+                      : "Abierto"}
+                  </span>
+                </td>
+
+                <!-- Acciones -->
+                <td class="px-5 py-4">
+                  <div
+                    class="
+                      flex
+                      items-center
+                      justify-end
+                      gap-2
+                    "
+                  >
+                    <a
+                      href={`/asistencias/${attendance.idAsisRapido}`}
+                      class="
+                        rounded-lg
+                        px-3 py-2
+                        text-sm font-medium
+                        text-brand-700
+                        transition-colors
+                        hover:bg-brand-50
+
+                        dark:text-brand-300
+                        dark:hover:bg-brand-950
+                      "
+                    >
+                      {attendance.estado === "ABIERTO"
+                        ? "Gestionar"
+                        : "Ver"}
+                    </a>
+
+                    {
+                      attendance.estado === "ABIERTO" && (
+                        <Button
+                          variant="danger"
+                          size="sm"
+                        >
+                          Eliminar
+                        </Button>
+                      )
+                    }
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    ) : (
+      <div
+        class="
+          flex
+          flex-col
+          items-center
+          justify-center
+          px-6 py-16
+          text-center
+        "
+      >
+        <p
+          class="
+            font-medium
+            text-slate-700
+            dark:text-slate-200
+          "
+        >
+          No hay asistencias
+        </p>
+
+        <p
+          class="
+            mt-1
+            text-sm
+            text-slate-500
+          "
+        >
+          Todavía no existen asistencias para este periodo.
+        </p>
+      </div>
+    )
+  }
+</div>
